@@ -1,4 +1,4 @@
-package org.jboss.resteasy.client.jaxrs.engines.jetty;
+package org.jboss.resteasy.client.jaxrs.engines.jetty12;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,21 +12,25 @@ import java.util.function.Consumer;
 import javax.net.ssl.SSLContext;
 
 import jakarta.ws.rs.client.InvocationCallback;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
 
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.api.Request.Content;
-import org.eclipse.jetty.client.api.Response;
-import org.eclipse.jetty.client.util.InputStreamResponseListener;
-import org.eclipse.jetty.client.util.OutputStreamRequestContent;
+import org.eclipse.jetty.client.InputStreamResponseListener;
+import org.eclipse.jetty.client.OutputStreamRequestContent;
+import org.eclipse.jetty.client.Request;
+import org.eclipse.jetty.client.Request.Content;
+import org.eclipse.jetty.client.Response;
+import org.eclipse.jetty.http.HttpFields;
+import org.jboss.resteasy.client.jaxrs.engines.jetty.AbstractJettyClientEngine;
 import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
 import org.jboss.resteasy.client.jaxrs.internal.ClientResponse;
 
-public class JettyClientEngine extends AbstractJettyClientEngine<Request> {
+public class Jetty12ClientEngine extends AbstractJettyClientEngine<Request> {
 
     private final HttpClient client;
 
-    public JettyClientEngine(final HttpClient client) {
+    public Jetty12ClientEngine(final HttpClient client) {
         if (!client.isStarted()) {
             try {
                 client.start();
@@ -40,6 +44,21 @@ public class JettyClientEngine extends AbstractJettyClientEngine<Request> {
     @Override
     public SSLContext getSslContext() {
         return client.getSslContextFactory().getSslContext();
+    }
+
+    @Override
+    public void close() {
+        try {
+            client.stop();
+        } catch (final Exception e) {
+            throw new RuntimeException("Unable to close JettyHttpEngine", e);
+        }
+    }
+
+    @Override
+    protected Request newRequest(final ClientInvocation invocation) {
+        return client.newRequest(invocation.getUri())
+                .method(invocation.getMethod());
     }
 
     @Override
@@ -68,12 +87,6 @@ public class JettyClientEngine extends AbstractJettyClientEngine<Request> {
     }
 
     @Override
-    protected Request newRequest(final ClientInvocation invocation) {
-        return client.newRequest(invocation.getUri())
-                .method(invocation.getMethod());
-    }
-
-    @Override
     protected void headers(final Request request, final Consumer<BiConsumer<String, String>> addHeaders) {
         request.headers(mutable -> addHeaders.accept(mutable::add));
     }
@@ -99,6 +112,12 @@ public class JettyClientEngine extends AbstractJettyClientEngine<Request> {
                 return entity;
             }
         };
+    }
+
+    MultivaluedMap<String, String> extract(final HttpFields headers) {
+        final MultivaluedMap<String, String> extracted = new MultivaluedHashMap<>();
+        headers.forEach(h -> extracted.add(h.getName(), h.getValue()));
+        return extracted;
     }
 
     @Override
@@ -134,14 +153,5 @@ public class JettyClientEngine extends AbstractJettyClientEngine<Request> {
     @Override
     protected void abortRequest(final Request request, final Exception cancel) {
         request.abort(cancel);
-    }
-
-    @Override
-    public void close() {
-        try {
-            client.stop();
-        } catch (final Exception e) {
-            throw new RuntimeException("Unable to close JettyHttpEngine", e);
-        }
     }
 }

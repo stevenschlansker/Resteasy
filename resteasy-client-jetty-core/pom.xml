@@ -9,19 +9,14 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>resteasy-client-jetty</artifactId>
-    <name>RESTEasy Client - Jetty Engine</name>
+    <artifactId>resteasy-client-jetty-core</artifactId>
+    <name>RESTEasy Client - Jetty Core</name>
 
     <dependencies>
 
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-client</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.resteasy</groupId>
-            <artifactId>resteasy-client-jetty-core</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -45,7 +40,7 @@
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-client</artifactId>
+            <artifactId>jetty-http</artifactId>
         </dependency>
         <dependency>
             <groupId>jakarta.ws.rs</groupId>

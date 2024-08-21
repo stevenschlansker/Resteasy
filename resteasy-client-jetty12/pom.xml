@@ -9,8 +9,32 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>resteasy-client-jetty</artifactId>
-    <name>RESTEasy Client - Jetty Engine</name>
+    <artifactId>resteasy-client-jetty12</artifactId>
+    <name>RESTEasy Client - Jetty 12 Engine</name>
+
+    <properties>
+        <version.org.eclipse.jetty>12.0.12</version.org.eclipse.jetty>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-client</artifactId>
+                <version>${version.org.eclipse.jetty}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-http</artifactId>
+                <version>${version.org.eclipse.jetty}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
+                <version>${version.org.eclipse.jetty}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
 
