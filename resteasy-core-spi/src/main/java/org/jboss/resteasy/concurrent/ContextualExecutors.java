@@ -95,33 +95,6 @@ public class ContextualExecutors {
      * If executed in a Jakarta EE container which includes a default {@code ManagedScheduledExecutorService}, that executor
      * is wrapped an said to be managed. If the default executor service cannot be found or if not being executed in a
      * Jakarta EE container a new {@linkplain Executors#newScheduledThreadPool(int) scheduled thread pool} will be
-     * wrapped. The size of the thread pool is retrieved via the {@code resteasy.async.timeout.scheduler.min.pool.size}
-     * context parameter. If not found {@code 1} is the default. The thread pool size is ignored in Jakarta EE
-     * environments.
-     * </p>
-     * <p>
-     * In a Jakarta EE container the JNDI lookup name can be overridden with the
-     * {@code resteasy.async.scheduled.executor.service.jndi} configuration property. By default the JNDI lookup name is
-     * {@code java:comp/DefaultManagedScheduledExecutorService}.
-     * </p>
-     *
-     * @return a new contextual executor
-     */
-    public static ContextualScheduledExecutorService scheduledThreadPool() {
-        ScheduledExecutorService delegate = lookup(SCHEDULED_EXECUTOR_SERVICE_JNDI);
-        if (delegate == null) {
-            delegate = GlobalContextualScheduledExecutorService.INSTANCE;
-        }
-        return wrap(delegate, true);
-    }
-
-    /**
-     * Creates a new {@link ContextualScheduledExecutorService} or wraps the default {@code ManagedScheduledExecutorService}
-     * in a Jakarta EE environment.
-     * <p>
-     * If executed in a Jakarta EE container which includes a default {@code ManagedScheduledExecutorService}, that executor
-     * is wrapped an said to be managed. If the default executor service cannot be found or if not being executed in a
-     * Jakarta EE container a new {@linkplain Executors#newScheduledThreadPool(int) scheduled thread pool} will be
      * wrapped.
      * </p>
      * <p>

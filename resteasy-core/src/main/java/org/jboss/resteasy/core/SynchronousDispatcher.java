@@ -8,6 +8,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 
@@ -54,6 +56,7 @@ public class SynchronousDispatcher implements Dispatcher {
     protected Set<String> unwrappedExceptions = new HashSet<String>();
     protected boolean bufferExceptionEntityRead = false;
     protected boolean bufferExceptionEntity = true;
+    protected Timer timer = new Timer("dispatcher-timer", true);
 
     {
         // This is to make sure LogMessages are preloaded as profiler shows a runtime hit
@@ -61,6 +64,13 @@ public class SynchronousDispatcher implements Dispatcher {
         // Not a big deal if you remove this.
         @SuppressWarnings("unused")
         LogMessages preload = LogMessages.LOGGER;
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                // Avoid leaking tccl
+                Thread.currentThread().setContextClassLoader(null);
+            }
+        }, 0);
     }
 
     public SynchronousDispatcher(final ResteasyProviderFactory providerFactory) {
@@ -551,4 +561,7 @@ public class SynchronousDispatcher implements Dispatcher {
         requestPreprocessors.add(httpPreprocessor);
     }
 
+    public Timer getTimer() {
+        return timer;
+    }
 }

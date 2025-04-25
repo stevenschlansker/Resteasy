@@ -2,10 +2,9 @@ package org.jboss.resteasy.plugins.server.servlet;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import jakarta.servlet.AsyncContext;
@@ -68,14 +67,12 @@ public class Servlet3AsyncHttpRequest extends HttpServletInputMessage {
 
         private class Servlet3AsynchronousResponse extends AbstractAsynchronousResponse
                 implements AsyncListener, AutoCloseable {
-            private final ScheduledExecutorService asyncScheduler;
             private final Object responseLock = new Object();
-            protected ScheduledFuture<?> timeoutFuture; // this is to get around TCK tests that call setTimeout in a separate thread which is illegal.
+            protected TimerTask timeoutTask; // this is to get around TCK tests that call setTimeout in a separate thread which is illegal.
 
             private Servlet3AsynchronousResponse() {
                 super(Servlet3ExecutionContext.this.dispatcher, Servlet3ExecutionContext.this.request,
                         Servlet3ExecutionContext.this.response);
-                asyncScheduler = ContextualExecutors.scheduledThreadPool();
             }
 
             @Override
@@ -148,20 +145,32 @@ public class Servlet3AsyncHttpRequest extends HttpServletInputMessage {
                         return false;
 
                     // this is to get around TCK tests that call setTimeout in a separate thread which is illegal.
-                    if (timeoutFuture != null && !timeoutFuture.cancel(false)) {
-                        return false;
+                    if (timeoutTask != null) {
+                        timeoutTask.cancel();
                     }
                     if (time <= 0)
                         return true;
-                    Runnable task = new Runnable() {
+                    Runnable contextualTask = ContextualExecutors.runnable(new Runnable() {
                         @Override
                         public void run() {
                             LogMessages.LOGGER.debug(Messages.MESSAGES.scheduledTimeout());
                             handleTimeout();
                         }
+                    });
+                    ClassLoader tccl = Thread.currentThread().getContextClassLoader();
+                    timeoutTask = new TimerTask() {
+                        @Override
+                        public void run() {
+                            try {
+                                Thread.currentThread().setContextClassLoader(tccl);
+                                contextualTask.run();
+                            } finally {
+                                Thread.currentThread().setContextClassLoader(null);
+                            }
+                        }
                     };
                     LogMessages.LOGGER.debug(Messages.MESSAGES.schedulingTimeout());
-                    timeoutFuture = asyncScheduler.schedule(task, time, unit);
+                    dispatcher.getTimer().schedule(timeoutTask, unit.toMillis(time));
                 }
                 return true;
             }
@@ -303,7 +312,11 @@ public class Servlet3AsyncHttpRequest extends HttpServletInputMessage {
 
             @Override
             public void close() {
-                asyncScheduler.shutdown();
+                synchronized (responseLock) {
+                    if (timeoutTask != null) {
+                        timeoutTask.cancel();
+                    }
+                }
             }
         }
 
