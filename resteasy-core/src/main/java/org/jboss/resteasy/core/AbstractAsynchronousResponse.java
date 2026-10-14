@@ -175,8 +175,9 @@ public abstract class AbstractAsynchronousResponse implements ResteasyAsynchrono
                 jaxrsResponse.addMethodAnnotations(method.getMethodAnnotations());
                 response = jaxrsResponse;
             }
+            AsyncCompletion completion = AsyncCompletion.whenWritten();
             try {
-                dispatcher.asynchronousDelivery(this.request, this.response, response, t -> {
+                dispatcher.asynchronousDelivery(this.request, this.response, response, completion.onWritten(t -> {
                     if (t != null) {
                         internalResume(t, t2 -> {
                             onComplete.accept(t);
@@ -186,8 +187,12 @@ public abstract class AbstractAsynchronousResponse implements ResteasyAsynchrono
                         onComplete.accept(null);
                         completionCallbacks(null);
                     }
-                });
+                }));
             } catch (Throwable e) {
+                if (completion.afterCompletion(e)) {
+                    completionCallbacks(e);
+                    return true;
+                }
                 return internalResume(e, t -> {
                     onComplete.accept(e);
                     // callbacks done by internalResume
