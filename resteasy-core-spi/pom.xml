@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jboss.resteasy</groupId>
         <artifactId>resteasy-jaxrs-all</artifactId>
-        <version>7.0.5.Final-WS-1</version>
+        <version>7.0.5.Final-WS-2</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>resteasy-core-spi</artifactId>
