@@ -132,12 +132,12 @@
             <dependency>
                 <groupId>org.jboss.resteasy</groupId>
                 <artifactId>resteasy-core</artifactId>
-                <version>7.0.5.Final</version>
+                <version>7.0.5.Final-WS-4</version>
             </dependency>
             <dependency>
                 <groupId>org.jboss.resteasy</groupId>
                 <artifactId>resteasy-core-spi</artifactId>
-                <version>7.0.5.Final</version>
+                <version>7.0.5.Final-WS-4</version>
             </dependency>
             <dependency>
                 <groupId>org.jboss.resteasy</groupId>
